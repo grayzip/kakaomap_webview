@@ -53,16 +53,16 @@ class KakaoMapView extends StatelessWidget {
   final String? customOverlay;
 
   /// Marker tap event
-  final void Function(JavascriptMessage)? onTapMarker;
+  final void Function(JavaScriptMessage)? onTapMarker;
 
   /// Zoom change event
-  final void Function(JavascriptMessage)? zoomChanged;
+  final void Function(JavaScriptMessage)? zoomChanged;
 
   /// When user stop moving camera, this event will occur
-  final void Function(JavascriptMessage)? cameraIdle;
+  final void Function(JavaScriptMessage)? cameraIdle;
 
   /// North East, South West lat, lang will be updated when the move event is occurred
-  final void Function(JavascriptMessage)? boundaryUpdate;
+  final void Function(JavaScriptMessage)? boundaryUpdate;
 
   /// [KakaoFigure] is required [KakaoFigure.path] to make polygon.
   /// If null, it won't be enabled
@@ -114,50 +114,22 @@ class KakaoMapView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(
+        Uri.parse((customScript == null) ? _getHTML() : _customScriptHTML()),
+      );
     return SizedBox(
       key: mapWidgetKey,
       height: height,
       width: width,
-      child: WebView(
-        initialUrl: (customScript == null) ? _getHTML() : _customScriptHTML(),
-        onWebViewCreated: mapController,
-        javascriptMode: JavascriptMode.unrestricted,
-        javascriptChannels: _getChannels,
-        debuggingEnabled: true,
+      child: WebViewWidget(
+        controller: controller,
         gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
           Factory(() => EagerGestureRecognizer()),
         ].toSet(),
       ),
     );
-  }
-
-  Set<JavascriptChannel>? get _getChannels {
-    Set<JavascriptChannel>? channels = {};
-    if (onTapMarker != null) {
-      channels.add(JavascriptChannel(
-          name: 'onTapMarker', onMessageReceived: onTapMarker!));
-    }
-
-    if (zoomChanged != null) {
-      channels.add(JavascriptChannel(
-          name: 'zoomChanged', onMessageReceived: zoomChanged!));
-    }
-
-    if (cameraIdle != null) {
-      channels.add(JavascriptChannel(
-          name: 'cameraIdle', onMessageReceived: cameraIdle!));
-    }
-
-    if (boundaryUpdate != null) {
-      channels.add(JavascriptChannel(
-          name: 'boundaryUpdate', onMessageReceived: boundaryUpdate!));
-    }
-
-    if (channels.isEmpty) {
-      return null;
-    }
-
-    return channels;
   }
 
   String _getHTML() {
@@ -311,7 +283,7 @@ $overlayStyle
         strokeWeight: ${polygon?.strokeWeight},
         strokeColor: ${polygon?.getStrokeColor},
         strokeOpacity: ${polygon?.strokeColorOpacity},
-        strokeStyle: '${polygon?.strokeStyle.name}',
+        strokeStyle: '${polygon?.strokeStyle}',
         fillColor: ${polygon?.getPolygonColor},
         fillOpacity: ${polygon?.polygonColorOpacity} 
       });
@@ -324,7 +296,7 @@ $overlayStyle
         strokeWeight: ${polyline?.strokeWeight},
         strokeColor: ${polyline?.getStrokeColor},
         strokeOpacity: ${polyline?.strokeColorOpacity},
-        strokeStyle: '${polyline?.strokeStyle.name}'
+        strokeStyle: '${polyline?.strokeStyle}'
       });
     }
 	</script>
